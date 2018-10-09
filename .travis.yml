@@ -23,28 +23,109 @@
 
 # 1. Choose OS (Ubuntu 14.04.3 LTS Server Edition 64bit, ~2 CORE, 7.5GB RAM)
 sudo: required
-dist: trusty
+dist: xenial
 
 # 2. Choose language and target JDKs for parallel builds.
-language: java
+language: scala
+scala:
+  - 2.11.8
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 # 3. Setup cache directory for SBT and Maven.
 cache:
   directories:
   - $HOME/.sbt
   - $HOME/.m2
+  - $HOME/.ivy2
 
 # 4. Turn off notifications.
 notifications:
-  email: false
+  email:
+    on_success: always
+    on_failure: always
+
+before_install:
+  - unset SBT_OPTS JVM_OPTS
+  - curl -o $HOME/.m2/settings.xml https://raw.githubusercontent.com/trajano/trajano/master/src/site/resources/settings.xml
+  - wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+  - wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+
+before_deploy:
+  - ./dev/make-distribution.sh --name ne-$TRAVIS_TAG --pip --tgz -Pspark-ganglia-lgpl -Phadoop-2.7 -Dhadoop.version=2.7.3 -Phive -Phive-thriftserver -Pyarn
+
+deploy:
+  - provider: releases
+    api_key: $GITHUB_TOKEN
+    file_glob: true
+    file: spark-2.3.2-bin-ne-$TRAVIS_TAG.tgz
+    skip_cleanup: true
+    on:
+      tags: true
 
 # 5. Run maven install before running lint-java.
 install:
-  - export MAVEN_SKIP_RC=1
-  - build/mvn -T 4 -q -DskipTests -Pkubernetes -Pmesos -Pyarn -Pkinesis-asl -Phive -Phive-thriftserver install
+  - export MAVEN_OPTS="-Xmx2g -XX:ReservedCodeCacheSize=1g -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN"
+  - build/mvn --no-transfer-progress -Pspark-ganglia-lgpl -Phadoop-2.7 -Dhadoop.version=2.7.3 -Phive -Phive-thriftserver -Pyarn install -DskipTests
 
-# 6. Run lint-java.
+# 6. Run tests
+
+matrix:
+  include:
+    - name: core-java-scala-test
+      env: PROFILES="" MODULES="core/testOnly  test.org.apache.spark.* org.apache.sparktest.*"
+    - name: core-a-m-test
+      env: PROFILES="" MODULES="core/testOnly org.apache.spark.a* org.apache.spark.b* org.apache.spark.c* org.apache.spark.d* org.apache.spark.e* org.apache.spark.f* org.apache.spark.g* org.apache.spark.h* org.apache.spark.i* org.apache.spark.j* org.apache.spark.k* org.apache.spark.l* org.apache.spark.m*"
+    - name: core-n-z-test
+      env: PROFILES="" MODULES="core/testOnly org.apache.spark.n* org.apache.spark.o* org.apache.spark.p* org.apache.spark.q* org.apache.spark.r* org.apache.spark.s* org.apache.spark.t* org.apache.spark.u* org.apache.spark.v* org.apache.spark.w* org.apache.spark.x* org.apache.spark.y* org.apache.spark.z*"
+    - name: core-A-Z-test
+      env: PROFILES="" MODULES="core/testOnly org.apache.spark.A* org.apache.spark.B* org.apache.spark.C* org.apache.spark.D* org.apache.spark.E* org.apache.spark.F* org.apache.spark.G* org.apache.spark.H* org.apache.spark.I* org.apache.spark.J* org.apache.spark.K* org.apache.spark.L* org.apache.spark.M* org.apache.spark.N*  org.apache.spark.O* org.apache.spark.P* org.apache.spark.Q* org.apache.spark.R* org.apache.spark.S* org.apache.spark.T* org.apache.spark.U* org.apache.spark.V* org.apache.spark.W* org.apache.spark.X* org.apache.spark.Y* org.apache.spark.Z*"
+    - name: streaming
+      env: PROFILES="" MODULES=streaming/test
+    - name: ml
+      env: PROFILES="" MODULES=mllib/test
+    - name: graphx
+      env: PROFILES="" MODULES=graphx/test
+    - name: network
+      env: PROFILES="" MODULES=network-common/test
+    - name: shuffle
+      env: PROFILES="" MODULES=network-shuffle/test
+    - name: unsafe
+      env: PROFILES="" MODULES=unsafe/test
+    - name: yarn
+      env: PROFILES="-Pyarn" MODULES="yarn/test"
+    - name: repl
+      env: PROFILES="" MODULES=repl/test
+    - name: launcher
+      env: PROFILES="" MODULES=launcher/test
+    - name: catalyst
+      env: PROFILES="" MODULES=catalyst/test
+    - name: sql-java-test
+      env: PROFILES="" MODULES="sql/testOnly test.*"
+    - name: sql-a-m-test
+      env: PROFILES="" MODULES="sql/testOnly org.apache.spark.sql.a* org.apache.spark.sql.b* org.apache.spark.sql.c* org.apache.spark.sql.d* org.apache.spark.sql.e* org.apache.spark.sql.f* org.apache.spark.sql.g* org.apache.spark.sql.h* org.apache.spark.sql.i* org.apache.spark.sql.j* org.apache.spark.sql.k* org.apache.spark.sql.l* org.apache.spark.sql.m*"
+    - name: sql-n-z-test
+      env: PROFILES="" MODULES="sql/testOnly org.apache.spark.sql.n* org.apache.spark.sql.o* org.apache.spark.sql.p* org.apache.spark.sql.q* org.apache.spark.sql.r* org.apache.spark.sql.s* org.apache.spark.sql.t* org.apache.spark.sql.u* org.apache.spark.sql.v* org.apache.spark.sql.w* org.apache.spark.sql.x* org.apache.spark.sql.y* org.apache.spark.sql.z*"
+    - name: sql-A-Z-test
+      env: PROFILES="" MODULES="sql/testOnly org.apache.spark.sql.A* org.apache.spark.sql.B* org.apache.spark.sql.C* org.apache.spark.sql.D* org.apache.spark.sql.E* org.apache.spark.sql.F* org.apache.spark.sql.G* org.apache.spark.sql.H* org.apache.spark.sql.I* org.apache.spark.sql.J* org.apache.spark.sql.K* org.apache.spark.sql.L* org.apache.spark.sql.M* org.apache.spark.sql.N* org.apache.spark.sql.O* org.apache.spark.sql.P* org.apache.spark.sql.Q* org.apache.spark.sql.R* org.apache.spark.sql.S* org.apache.spark.sql.T* org.apache.spark.sql.U* org.apache.spark.sql.V* org.apache.spark.sql.W* org.apache.spark.sql.X* org.apache.spark.sql.Y* org.apache.spark.sql.Z*"
+    - name: hive
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.hive.C* org.apache.spark.sql.hive.E* org.apache.spark.sql.hive.H* org.apache.spark.sql.hive.L* org.apache.spark.sql.hive.M* org.apache.spark.sql.hive.P* org.apache.spark.sql.hive.Q* org.apache.spark.sql.hive.H* org.apache.spark.sql.hive.p* org.apache.spark.sql.hive.S* org.apache.spark.sql.hive.I* org.apache.spark.sql.hive.U*"
+    - name: hive-catalyst
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.catalyst.*"
+    - name: hive-client
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.hive.client.*"
+    - name: hive-orc
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.hive.orc.*"
+    - name: hive-execution
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.hive.execution.*"
+    - name: hive-sources
+      env: PROFILES="-Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest" MODULES="hive/testOnly org.apache.spark.sql.sources.*"
+
 script:
-  - dev/lint-java
+  - ./build/sbt -mem 8192 $PROFILES "$MODULES" -B -V -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -J-XX:ReservedCodeCacheSize=512M
+
+after_success:
+  - echo "Travis exited with ${TRAVIS_TEST_RESULT}"
+
+after_failure:
+  - echo "Travis exited with ${TRAVIS_TEST_RESULT}"
