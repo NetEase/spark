@@ -240,6 +240,11 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>SparkPackagesRepo</id>
+      <!-- More detail see http://apache-spark-user-list.1001560.n3.nabble.com/Bintray-replacement-for-spark-packages-org-td40128.html -->
+      <url>https://repos.spark-packages.org</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
