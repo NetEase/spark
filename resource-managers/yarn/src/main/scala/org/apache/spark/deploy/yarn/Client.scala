@@ -65,7 +65,7 @@ private[spark] class Client(
   import YarnSparkHadoopUtil._
 
   private val yarnClient = YarnClient.createYarnClient
-  private val hadoopConf = new YarnConfiguration(SparkHadoopUtil.newConfiguration(sparkConf))
+  private val hadoopConf = new YarnConfiguration(SparkHadoopUtil.get.newConfiguration(sparkConf))
 
   private val isClusterMode = sparkConf.get("spark.submit.deployMode", "client") == "cluster"
 
