@@ -448,7 +448,15 @@ class SparkContext(config: SparkConf) extends Logging {
       }
     // Bind the UI before starting the task scheduler to communicate
     // the bound port to the cluster manager properly
-    _ui.foreach(_.bind())
+    _ui.foreach { ui =>
+      try {
+        ui.bind()
+      } catch {
+        case e: Exception =>
+          logError("Error occured when binding SparkUI")
+          _ui = None
+      }
+    }
 
     _hadoopConfiguration = SparkHadoopUtil.get.newConfiguration(_conf)
 

@@ -132,7 +132,7 @@ private[spark] abstract class WebUI(
     } catch {
       case e: Exception =>
         logError(s"Failed to bind $className", e)
-        System.exit(1)
+        throw e
     }
   }
 

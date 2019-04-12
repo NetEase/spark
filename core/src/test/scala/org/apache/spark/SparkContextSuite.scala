@@ -627,6 +627,13 @@ class SparkContextSuite extends SparkFunSuite with LocalSparkContext with Eventu
     assert(exc.getCause() != null)
     stream.close()
   }
+
+  test("NESPARK-201: Create sparkUI with bind exception should not trigger application failed") {
+    val sc = new SparkContext(new SparkConf().setMaster("local").setAppName("test")
+      .set("spark.ui.port", "-1"))
+    assert(sc.ui === None)
+    sc.stop()
+  }
 }
 
 object SparkContextSuite {
