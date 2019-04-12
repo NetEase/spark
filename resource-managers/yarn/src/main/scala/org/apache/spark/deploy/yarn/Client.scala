@@ -799,6 +799,17 @@ private[spark] class Client(
         confStream.closeEntry()
       }
 
+      if (checkAtlasEnable(sparkConf)) {
+        for { prop <- Seq("atlas-application.properties")
+              url <- Option(Utils.getContextOrSparkClassLoader.getResource(prop))
+              if url.getProtocol == "file" } {
+          val file = new File(url.getPath())
+          confStream.putNextEntry(new ZipEntry(file.getName()))
+          Files.copy(file, confStream)
+          confStream.closeEntry()
+        }
+      }
+
       // Save the Hadoop config files under a separate directory in the archive. This directory
       // is appended to the classpath so that the cluster-provided configuration takes precedence.
       confStream.putNextEntry(new ZipEntry(s"$LOCALIZED_HADOOP_CONF_DIR/"))
@@ -1467,6 +1478,14 @@ private object Client extends Logging {
   private def checkRangerEnable(sparkConf: SparkConf): Boolean = {
     val rangerExt = "org.apache.ranger.authorization.spark.authorizer.RangerSparkSQLExtension"
     sparkConf.getOption("spark.sql.extensions").contains(rangerExt)
+  }
+
+  /**
+   * check if spark atlas plugin is enabled
+   */
+  private def checkAtlasEnable(sparkConf: SparkConf): Boolean = {
+    val atlasExt = "com.hortonworks.spark.atlas.SparkAtlasEventTracker"
+    sparkConf.getOption("spark.sql.queryExecutionListeners").contains(atlasExt)
   }
 
   /**
