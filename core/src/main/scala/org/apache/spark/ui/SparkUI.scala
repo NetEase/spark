@@ -28,7 +28,7 @@ import org.apache.spark.status.AppStatusStore
 import org.apache.spark.status.api.v1._
 import org.apache.spark.ui.JettyUtils._
 import org.apache.spark.ui.env.EnvironmentTab
-import org.apache.spark.ui.exec.ExecutorsTab
+import org.apache.spark.ui.exec.{ExecutorsTab, NeExecutorsTab}
 import org.apache.spark.ui.jobs.{JobsTab, StagesTab}
 import org.apache.spark.ui.storage.StorageTab
 import org.apache.spark.util.Utils
@@ -65,6 +65,7 @@ private[spark] class SparkUI private (
     attachTab(new StorageTab(this, store))
     attachTab(new EnvironmentTab(this, store))
     attachTab(new ExecutorsTab(this))
+    attachTab(new NeExecutorsTab(this, store))
     attachHandler(createStaticHandler(SparkUI.STATIC_RESOURCE_DIR, "/static"))
     attachHandler(createRedirectHandler("/", "/jobs/", basePath = basePath))
     attachHandler(ApiRootResource.getServletHandler(this))

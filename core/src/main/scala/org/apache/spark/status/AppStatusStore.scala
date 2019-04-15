@@ -66,6 +66,11 @@ private[spark] class AppStatusStore(
     filtered.asScala.map(_.info).toSeq
   }
 
+  def deadExecutorList(): Seq[v1.ExecutorSummary] = {
+    val base = store.view(classOf[ExecutorSummaryWrapper])
+    base.index("active").first(false).last(false).asScala.map(_.info).toSeq
+  }
+
   def executorSummary(executorId: String): v1.ExecutorSummary = {
     store.read(classOf[ExecutorSummaryWrapper], executorId).info
   }

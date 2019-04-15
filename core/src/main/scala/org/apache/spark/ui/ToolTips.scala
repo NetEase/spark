@@ -89,14 +89,62 @@ private[spark] object ToolTips {
     """
 
   val TASK_TIME =
-  "Shaded red when garbage collection (GC) time is over 10% of task time"
+    "Shaded red when garbage collection (GC) time is over 10% of task time"
 
   val BLACKLISTED =
-  "Shows if this executor has been blacklisted by the scheduler due to task failures."
+    "Shows if this executor has been blacklisted by the scheduler due to task failures."
 
   val APPLICATION_EXECUTOR_LIMIT =
     """Maximum number of executors that this application will use. This limit is finite only when
        dynamic allocation is enabled. The number of granted executors may exceed the limit
        ephemerally when executors are being killed.
     """
+  // scalastyle:off
+  val ADDRESS =
+    """
+      |Executor地址(IP:端口)
+    """.stripMargin
+
+  val EXECUTOR_STATUS =
+    """
+      |Executor状态
+    """.stripMargin
+
+  val RDD_BLOCKS =
+    """
+      |Executor上存储的RDD Block个数
+    """.stripMargin
+
+  val DISK_USED =
+    """
+      |Executor使用的磁盘容量
+    """.stripMargin
+
+  val EXECUTOR_CORES =
+    """
+      |Executor申请的核数，可通过spark.executor.cores参数指定，反映了该Executor的并发能力
+    """.stripMargin
+
+  val ACTIVE_TASKS =
+    """
+      |Executor上正在运行的任务数
+    """.stripMargin
+
+  val FAILD_TASKS =
+    """
+      |Executor运行至今失败的任务数
+    """.stripMargin
+
+  val COMPLETE_TASKS =
+    """
+      |Executor运行至今完成的任务数
+    """.stripMargin
+
+  val TOTAL_TASKS =
+    """
+      |Executor运行至今处理过的任务数
+    """.stripMargin
+
+  // scalastyle:on
+
 }
