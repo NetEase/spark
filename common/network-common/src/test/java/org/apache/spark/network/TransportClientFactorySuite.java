@@ -26,10 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -44,6 +41,7 @@ import org.apache.spark.network.util.ConfigProvider;
 import org.apache.spark.network.util.MapConfigProvider;
 import org.apache.spark.network.util.JavaUtils;
 import org.apache.spark.network.util.TransportConf;
+import org.junit.rules.ExpectedException;
 
 public class TransportClientFactorySuite {
   private TransportConf conf;
@@ -214,5 +212,25 @@ public class TransportClientFactorySuite {
       }
       assertFalse(c1.isActive());
     }
+  }
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
+  @Test
+  public void fastFailConnectionInTimeWindow() throws IOException, InterruptedException {
+    TransportClientFactory factory = context.createClientFactory();
+    TransportServer server = context.createServer();
+    int unreachablePort = server.getPort();
+    server.close();
+    try {
+      factory.createClient(TestUtils.getLocalHost(), unreachablePort, true);
+    } catch (Exception e) {
+      assert(e instanceof IOException);
+    }
+    expectedException.expect(IOException.class);
+    expectedException.expectMessage("fail this connection directly");
+    factory.createClient(TestUtils.getLocalHost(), unreachablePort, true);
+    expectedException = ExpectedException.none();
   }
 }
