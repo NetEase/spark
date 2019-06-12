@@ -21,12 +21,11 @@ import java.io.{IOException, ObjectOutputStream}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.ForkJoinTaskSupport
-import scala.concurrent.forkjoin.ForkJoinPool
 import scala.reflect.ClassTag
 
 import org.apache.spark.{Dependency, Partition, RangeDependency, SparkContext, TaskContext}
 import org.apache.spark.annotation.DeveloperApi
-import org.apache.spark.util.Utils
+import org.apache.spark.util.{ThreadUtils, Utils}
 
 /**
  * Partition for UnionRDD.
@@ -58,11 +57,6 @@ private[spark] class UnionPartition[T: ClassTag](
   }
 }
 
-object UnionRDD {
-  private[spark] lazy val partitionEvalTaskSupport =
-    new ForkJoinTaskSupport(new ForkJoinPool(8))
-}
-
 @DeveloperApi
 class UnionRDD[T: ClassTag](
     sc: SparkContext,
@@ -76,7 +70,8 @@ class UnionRDD[T: ClassTag](
   override def getPartitions: Array[Partition] = {
     val parRDDs = if (isPartitionListingParallel) {
       val parArray = rdds.par
-      parArray.tasksupport = UnionRDD.partitionEvalTaskSupport
+      parArray.tasksupport =
+        new ForkJoinTaskSupport(ThreadUtils.newForkJoinPool("getUnionRDDPartitions", 8))
       parArray
     } else {
       rdds
