@@ -111,7 +111,7 @@ private[sql] class SharedState(val sparkContext: SparkContext) extends Logging {
       CatalogUtils.stringToURI(warehousePath),
       Map())
     // Create default database if it doesn't exist
-    if (!externalCatalog.databaseExists(SessionCatalog.DEFAULT_DATABASE)) {
+    if (!externalCatalog.databaseExists(SessionCatalog.DEFAULT_DATABASE, compatible = true)) {
       // There may be another Spark application creating default database at the same time, here we
       // set `ignoreIfExists = true` to avoid `DatabaseAlreadyExists` exception.
       externalCatalog.createDatabase(defaultDbDefinition, ignoreIfExists = true)
@@ -135,7 +135,7 @@ private[sql] class SharedState(val sparkContext: SparkContext) extends Logging {
     // for every session, because case-sensitivity differs. Here we always lowercase it to make our
     // life easier.
     val globalTempDB = sparkContext.conf.get(GLOBAL_TEMP_DATABASE).toLowerCase(Locale.ROOT)
-    if (externalCatalog.databaseExists(globalTempDB)) {
+    if (externalCatalog.databaseExists(globalTempDB, compatible = true)) {
       throw new SparkException(
         s"$globalTempDB is a system preserved database, please rename your existing database " +
           "to resolve the name conflict, or set a different value for " +

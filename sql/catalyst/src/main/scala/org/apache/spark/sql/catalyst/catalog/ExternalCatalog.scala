@@ -36,7 +36,7 @@ abstract class ExternalCatalog
   import CatalogTypes.TablePartitionSpec
 
   protected def requireDbExists(db: String): Unit = {
-    if (!databaseExists(db)) {
+    if (!databaseExists(db, compatible = true)) {
       throw new NoSuchDatabaseException(db)
     }
   }
