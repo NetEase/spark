@@ -96,7 +96,9 @@ class SessionCatalog(
   // check whether the temporary view or function exists, then, if not, operate on
   // the corresponding item in the current database.
   @GuardedBy("this")
-  protected var currentDb: String = formatDatabaseName(DEFAULT_DATABASE)
+  protected var currentDb: String = formatDatabaseName {
+    conf.getConfString("spark.sql.default.database", DEFAULT_DATABASE)
+  }
 
   /**
    * Checks if the given name conforms the Hive standard ("[a-zA-Z_0-9]+"),
