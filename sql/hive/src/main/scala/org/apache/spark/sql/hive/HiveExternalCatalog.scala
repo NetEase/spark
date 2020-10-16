@@ -198,13 +198,18 @@ private[spark] class HiveExternalCatalog(conf: SparkConf, hadoopConf: Configurat
   }
 
   override def databaseExists(db: String, compatible: Boolean): Boolean = {
+    /**
+     * In some situations, the class loader of `ae.getCause` is
+     * [[org.apache.spark.sql.hive.client.IsolatedClientLoader]], while
+     * `HiveExceptions` loaded by [[sun.misc.Launcher]]. So, we need to
+     * determine whether the two are same by the name of classes.
+     */
     def isACLException(ae: AnalysisException): Boolean = {
-      ae.getCause match {
-        case he: HiveException if he.getCause != null && he.getCause.isInstanceOf[MetaException] =>
-          StringUtils.contains(he.getCause.asInstanceOf[MetaException].getMessage,
-            "AccessControlException")
-        case _ => false
-      }
+      ae.getCause != null &&
+        ae.getCause.getClass.getName == classOf[HiveException].getName &&
+        ae.getCause.getCause != null &&
+        ae.getCause.getCause.getClass.getName == classOf[MetaException].getName &&
+        StringUtils.contains(ae.getMessage, "AccessControlException")
     }
 
     if (compatible) {
