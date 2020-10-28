@@ -633,7 +633,7 @@ class DateTimeUtilsSuite extends SparkFunSuite {
     }
   }
 
-  test("daysToMillis and millisToDays") {
+  ignore("daysToMillis and millisToDays") {
     val c = Calendar.getInstance(TimeZonePST)
 
     c.set(2015, 11, 31, 16, 0, 0)
