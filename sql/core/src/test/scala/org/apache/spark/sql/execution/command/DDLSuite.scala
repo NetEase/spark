@@ -1271,7 +1271,7 @@ abstract class DDLSuite extends QueryTest with SQLTestUtils {
       // if (isUsingHiveMetastore) {
       //  assert(storageFormat.properties.get("path") === expected)
       // }
-      assert(storageFormat.locationUri ===
+      assert(storageFormat.locationUri.map(p => makeQualifiedPath(p.toString)) ===
         Some(makeQualifiedPath(CatalogUtils.URIToString(expected))))
     }
     // set table location
