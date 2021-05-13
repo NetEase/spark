@@ -2877,5 +2877,30 @@
         </repository>
       </repositories>
     </profile>
+
+    <profile>
+      <id>ne-hadoop-2.7</id>
+      <properties>
+        <hadoop.version>2.7.3</hadoop.version>
+        <curator.version>2.7.1</curator.version>
+      </properties>
+
+      <repositories>
+        <repository>
+          <id>repo-releases</id>
+          <name>repo-releases</name>
+          <url>http://mvn.hz.netease.com/artifactory/libs-releases</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+
   </profiles>
 </project>
