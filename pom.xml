@@ -2902,5 +2902,34 @@
       </repositories>
     </profile>
 
+    <profile>
+      <id>cdh6</id>
+      <properties>
+        <hive.version>1.2.1-0.1.6.spark2</hive.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <zookeeper.version>3.4.5-cdh6.3.1</zookeeper.version>
+        <curator.version>2.12.0</curator.version>
+        <jetty.version>9.3.25.v20180904</jetty.version>
+        <avro.version>1.8.2-cdh6.3.1</avro.version>
+        <commons.httpclient.version>4.5.3</commons.httpclient.version>
+        <commons.httpcore.version>4.4.6</commons.httpcore.version>
+        <hadoop.version>3.0.0-cdh6.3.1</hadoop.version>
+        <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.9.9</fasterxml.jackson.databind.version>
+      </properties>
+
+      <repositories>
+        <repository>
+          <id>cloudera-repos</id>
+          <name>cloudera-repos</name>
+          <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+        <repository>
+          <id>repo-releases</id>
+          <name>repo-releases</name>
+          <url>https://mvn.hz.netease.com/artifactory/libs-releases</url>
+        </repository>
+      </repositories>
+    </profile>
   </profiles>
 </project>
