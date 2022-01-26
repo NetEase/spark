@@ -87,7 +87,7 @@ class HadoopDelegationTokenManagerSuite extends SparkFunSuite with Matchers {
     tokens.size() should be (0)
   }
 
-  test("obtain tokens For HiveMetastore") {
+  ignore("obtain tokens For HiveMetastore") {
     val hadoopConf = new Configuration()
     hadoopConf.set("hive.metastore.kerberos.principal", "bob")
     // thrift picks up on port 0 and bails out, without trying to talk to endpoint
