@@ -1,0 +1,486 @@
+name: v2.3.2-based
+
+on:
+  push:
+    branches:
+      - v2.3.2-based
+  pull_request:
+    branches:
+      - v2.3.2-based
+
+jobs:
+  build:
+
+    runs-on: ubuntu-16.04
+    strategy:
+      matrix:
+        scala: [ '2.11' ]
+        hadoop: [ 'hadoop-2.7' ]
+    name: Build Spark with Scala ${{ matrix.scala }} / Hadoop ${{ matrix.hadoop }}
+
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Change to Scala ${{ matrix.scala }}
+        run: |
+          dev/change-scala-version.sh ${{ matrix.scala }}
+      - name: Build with Maven
+        run: |
+          export MAVEN_OPTS="-Xmx2g -XX:ReservedCodeCacheSize=1g -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN"
+          export MAVEN_CLI_OPTS="--no-transfer-progress"
+          mkdir -p ~/.m2
+          ./build/mvn $MAVEN_CLI_OPTS -DskipTests -Pyarn -Pmesos -Pkubernetes -Phive -Phive-thriftserver -Pscala-${{ matrix.scala }} -P${{ matrix.hadoop }} install
+          rm -rf ~/.m2/repository/org/apache/spark
+
+  core:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test core
+        run: ./build/sbt -mem 4096 core/test
+
+  network-common:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test network-common
+        run: ./build/sbt -mem 4096 network-common/test
+
+  network-shuffle:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test network-shuffle
+        run: ./build/sbt -mem 4096 network-shuffle/test
+
+  unsafe:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test unsafe
+        run: ./build/sbt -mem 4096 unsafe/test
+
+  repl:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test repl
+        run: |
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+          ./build/sbt -mem 4096 repl/test
+
+  yarn:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test yarn
+        run: ./build/sbt -mem 4096 -Pyarn yarn/test
+
+  catalyst:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test catalyst
+        run: |
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+          ./build/sbt -mem 4096 catalyst/test
+
+  sql:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test sql
+        run: |
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+          ./build/sbt -mem 4096 sql/test
+
+  hive:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test hive
+        run: |
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+          ./build/sbt -mem 4096 -Phive -Dtest.exclude.tags=org.apache.spark.tags.ExtendedHiveTest hive/test
+
+  launcher:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test launcher
+        run: ./build/sbt -mem 4096 launcher/test
+
+  streaming:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test streaming
+        run: ./build/sbt -mem 4096 streaming/test
+
+  mllib:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test mllib
+        run: |
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.jar
+          wget -P $HOME/.m2/repository/yaooqinn/spark-authorizer/2.1.1 http://dl.bintray.com/spark-packages/maven/yaooqinn/spark-authorizer/2.1.1/spark-authorizer-2.1.1.pom
+          ./build/sbt -mem 4096 mllib/test
+
+  graphx:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@master
+      # We split caches because GitHub Action Cache has a 400MB-size limit.
+      - uses: actions/cache@v1
+        with:
+          path: build
+          key: build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/com
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-com-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository/org
+          key: ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ matrix.scala }}-${{ matrix.hadoop }}-maven-org-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: Test graphx
+        run: ./build/sbt -mem 4096 graphx/test
+
+
+  lint:
+    runs-on: ubuntu-16.04
+    name: Linters (Java/Scala/Python), licenses, dependencies
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+      - name: Scala
+        run: ./dev/lint-scala
+      - name: Java
+        run: ./dev/lint-java
+      - name: Python
+        run: |
+          pip install flake8 sphinx numpy
+          ./dev/lint-python
+      - name: License
+        run: ./dev/check-license
+      - name: Dependencies
+        run: ./dev/test-dependencies.sh
