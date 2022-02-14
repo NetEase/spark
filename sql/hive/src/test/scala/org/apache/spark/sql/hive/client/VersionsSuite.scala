@@ -48,7 +48,7 @@ import org.apache.spark.util.{MutableURLClassLoader, Utils}
  */
 // TODO: Refactor this to `HiveClientSuite` and make it a subclass of `HiveVersionSuite`
 @ExtendedHiveTest
-class VersionsSuite extends SparkFunSuite with Logging {
+abstract class VersionsSuite extends SparkFunSuite with Logging {
 
   import HiveClientBuilder.buildClient
 
