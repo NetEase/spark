@@ -38,7 +38,9 @@ import org.apache.spark.util.Utils
  * from the built-in ones.
  */
 @ExtendedHiveTest
-class Hive_2_1_DDLSuite extends SparkFunSuite with TestHiveSingleton with BeforeAndAfterEach
+abstract class Hive_2_1_DDLSuite extends SparkFunSuite
+  with TestHiveSingleton
+  with BeforeAndAfterEach
   with BeforeAndAfterAll {
 
   // Create a custom HiveExternalCatalog instance with the desired configuration. We cannot
