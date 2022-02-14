@@ -40,7 +40,7 @@ import org.apache.spark.util.Utils
  * expected version under this local directory, e.g. `/tmp/spark-test/spark-2.0.3`, we will skip the
  * downloading for this spark version.
  */
-class HiveExternalCatalogVersionsSuite extends SparkSubmitTestUtils {
+abstract class HiveExternalCatalogVersionsSuite extends SparkSubmitTestUtils {
   private val wareHousePath = Utils.createTempDir(namePrefix = "warehouse")
   private val tmpDataDir = Utils.createTempDir(namePrefix = "test-data")
   // For local test, you can set `sparkTestingDir` to a static value like `/tmp/test-spark`, to
