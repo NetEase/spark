@@ -38,7 +38,7 @@ import org.apache.spark.util.{ResetSystemProperties, Utils}
 /**
  * This suite tests spark-submit with applications using HiveContext.
  */
-class HiveSparkSubmitSuite
+abstract class HiveSparkSubmitSuite
   extends SparkSubmitTestUtils
   with Matchers
   with BeforeAndAfterEach
