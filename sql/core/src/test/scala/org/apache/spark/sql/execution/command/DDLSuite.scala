@@ -239,7 +239,7 @@ abstract class DDLSuite extends QueryTest with SQLTestUtils {
     new Path(CatalogUtils.URIToString(warehousePath), s"$dbName.db").toUri
   }
 
-  test("alter table: set location (datasource table)") {
+  ignore("alter table: set location (datasource table)") {
     testSetLocation(isDatasourceTable = true)
   }
 
