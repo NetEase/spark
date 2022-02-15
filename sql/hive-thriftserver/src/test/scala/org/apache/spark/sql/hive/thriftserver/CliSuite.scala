@@ -301,10 +301,10 @@ class CliSuite extends SparkFunSuite with BeforeAndAfterAll with Logging {
   test("NESPARK-179: Test the sql statement whose semicolon in single quotes or double quotes") {
     val cmd1 = "select * from table_a where columna not like '%;'"
     val cmd2 = "select * from table_a where columna not like \"%;\""
-    assert(SparkSQLCLIDriver.splitSemiColon(cmd1) == cmd1)
-    assert(SparkSQLCLIDriver.splitSemiColon(cmd1 + ";") == cmd1)
-    assert(SparkSQLCLIDriver.splitSemiColon(cmd2) == cmd2)
-    assert(SparkSQLCLIDriver.splitSemiColon(cmd2 + ";") == cmd2)
+    assert(SparkSQLCLIDriver.splitSemiColon(cmd1).head == cmd1)
+    assert(SparkSQLCLIDriver.splitSemiColon(cmd1 + ";").head == cmd1)
+    assert(SparkSQLCLIDriver.splitSemiColon(cmd2).head == cmd2)
+    assert(SparkSQLCLIDriver.splitSemiColon(cmd2 + ";").head == cmd2)
 
     val dataFilePath =
       Thread.currentThread().getContextClassLoader.getResource("data/files/small_kv.txt")
